@@ -141,9 +141,14 @@ namespace BeatSaberHTTPStatus {
 					return;
 				}
 
+				playerHeadAndObstacleInteraction = Resources.FindObjectsOfTypeAll<PlayerHeadAndObstacleInteraction>().FirstOrDefault();
+				if (beatmapObjectCallbackController == null) {
+					Console.WriteLine("[HTTP Status] Couldn't find PlayerHeadAndObstacleInteraction");
+					return;
+				}
+
 				GameSongController gameSongController = (GameSongController) gameSongControllerField.GetValue(gameplayManager);
 				audioTimeSyncController = (AudioTimeSyncController) audioTimeSyncControllerField.GetValue(gameSongController);
-				playerHeadAndObstacleInteraction = (PlayerHeadAndObstacleInteraction) playerHeadAndObstacleInteractionField.GetValue(scoreController);
 
 				// Register event listeners
 				// private GameEvent GamePauseManager#_gameDidPauseSignal
@@ -254,18 +259,24 @@ namespace BeatSaberHTTPStatus {
 		}
 
 		public void OnUpdate() {
-			bool currentHeadInObstacle = playerHeadAndObstacleInteraction.intersectingObstacles.Count > 0;
+			if (playerHeadAndObstacleInteraction != null) {
+                Console.WriteLine(playerHeadAndObstacleInteraction);
+				bool currentHeadInObstacle = playerHeadAndObstacleInteraction.intersectingObstacles.Count > 0;
 
-			if (!headInObstacle && currentHeadInObstacle) {
-				headInObstacle = true;
+				if (!headInObstacle && currentHeadInObstacle) {
+					headInObstacle = true;
 
-				statusManager.EmitStatusUpdate(ChangedProperties.Performance, "obstacleEnter");
-			} else if (headInObstacle && !currentHeadInObstacle) {
-				headInObstacle = false;
+					statusManager.EmitStatusUpdate(ChangedProperties.Performance, "obstacleEnter");
+				}
+				else if (headInObstacle && !currentHeadInObstacle) {
+					headInObstacle = false;
 
-				statusManager.EmitStatusUpdate(ChangedProperties.Performance, "obstacleExit");
-			}
-		}
+					statusManager.EmitStatusUpdate(ChangedProperties.Performance, "obstacleExit");
+				}
+			} else{
+                // Console.WriteLine("[HTTP Status] Couldn't find PlayerHeadAndObstacleInteraction Again!");
+            }
+        }
 
 		public void OnGamePause() {
 			statusManager.gameStatus.paused = GetCurrentTime();
@@ -432,5 +443,5 @@ namespace BeatSaberHTTPStatus {
 		public void OnLevelWasLoaded(int level) {}
 		public void OnLevelWasInitialized(int level) {}
 		public void OnFixedUpdate() {}
-    }
+	}
 }
